@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Shapes Drawing App</title>
+    <link rel="icon" href="https://pph.name.ng/pphlogo.svg" />
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <section class="tools-board">
+        <div class="row">
+          <label class="title">Shapes</label>
+          <ul class="options">
+            <li class="option tool" id="rectangle">
+              <img src="icons/rectangle.svg" alt="">
+              <span>Rectangle</span>
+            </li>
+            <li class="option tool" id="circle">
+              <img src="icons/circle.svg" alt="">
+              <span>Circle</span>
+            </li>
+            <li class="option tool" id="triangle">
+              <img src="icons/triangle.svg" alt="">
+              <span>Triangle</span>
+            </li>
+            <li class="option">
+              <input type="checkbox" id="fill-color">
+              <label for="fill-color">Fill color</label>
+            </li>
+          </ul>
+        </div>
+        <div class="row">
+          <label class="title">Options</label>
+          <ul class="options">
+            <li class="option tool" id="select">
+              <svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 2.5 L5 19.5 L9.3 15.2 L12.1 21.5 L14.9 20.2 L12.1 14.1 L18.6 13.7 Z" fill="currentColor"/>
+              </svg>
+              <span>Select</span>
+            </li>
+            <li class="option active tool" id="brush">
+              <img src="icons/brush.svg" alt="">
+              <span>Brush</span>
+            </li>
+            <li class="option tool" id="eraser">
+              <img src="icons/eraser.svg" alt="">
+              <span>Eraser</span>
+            </li>
+            <li class="option">
+              <input type="range" id="size-slider" min="1" max="30" value="5">
+            </li>
+          </ul>
+        </div>
+        <div class="row colors">
+          <label class="title">Colors</label>
+          <ul class="options">
+            <li class="option" data-color="#ffffff"></li>
+            <li class="option selected" data-color="#000000"></li>
+            <li class="option" data-color="#E02020"></li>
+            <li class="option" data-color="#6DD400"></li>
+            <li class="option">
+              <input type="color" id="color-picker" value="#4A98F7">
+            </li>
+          </ul>
+        </div>
+        <div class="row buttons">
+          <button class="delete-shape">Delete Selected</button>
+          <button class="clear-canvas">Clear Canvas</button>
+          <button class="save-img">Save As Image</button>
+        </div>
+        <div class="row">
+          <p class="hint">
+            Tip: pick <b>Select</b>, then drag a shape to move it or grab a
+            handle to resize it. <b>Del</b> removes it, <b>Esc</b> deselects.
+          </p>
+        </div>
+      </section>
+      <section class="drawing-board">
+        <canvas></canvas>
+      </section>
+    </div>
+
+    <footer class="site-footer">
+       <a href="https://agunechemba.github.io" target="_blank" rel="noopener noreferrer">Credit: Agunechemba Ekene</a>
+    </footer>
+
+  </body>
+</html>

@@ -1,0 +1,288 @@
+/* Import Google font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+:root {
+  --bg-deep: #05100a;
+  --bg-mid: #0b1f14;
+  --panel-bg: #14281e;
+  --panel-border: #2a4a36;
+  --text-primary: #d0e8d0;
+  --text-secondary: #8ab88a;
+  --accent: #6DD400;
+  --accent-hover: #8eff33;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  min-height: 100vh;
+  padding: 15px 0;
+  background: radial-gradient(circle at 30% 20%, #0b1f14, #05100a 80%);
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  padding: 10px;
+  max-width: 1050px;
+}
+
+section {
+  background: var(--panel-bg);
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.tools-board {
+  width: 210px;
+  padding: 15px 22px 0;
+}
+
+.tools-board .row {
+  margin-bottom: 20px;
+}
+
+.row .options {
+  list-style: none;
+  margin: 10px 0 0 5px;
+}
+
+.row .options .option {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.row .options .option:hover,
+.row .options .option.active {
+  background: rgba(109, 212, 0, 0.08);
+}
+
+.option img {
+  width: 20px;
+  height: 20px;
+  filter: invert(1) brightness(0.9);
+  transition: filter 0.2s ease;
+}
+
+.option .tool-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.option:is(:hover, .active) img {
+  filter: invert(1) sepia(1) saturate(5) hue-rotate(60deg) brightness(1.2);
+}
+
+.option:is(:hover, .active) .tool-icon {
+  color: var(--accent);
+}
+
+.option :where(span, label) {
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding-left: 10px;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.option:is(:hover, .active) :where(span, label) {
+  color: var(--accent);
+}
+
+.option #fill-color {
+  cursor: pointer;
+  height: 14px;
+  width: 14px;
+  accent-color: var(--accent);
+}
+
+#fill-color:checked ~ label {
+  color: var(--accent);
+}
+
+.option #size-slider {
+  width: 100%;
+  height: 5px;
+  margin-top: 10px;
+  accent-color: var(--accent);
+}
+
+.colors .options {
+  display: flex;
+  justify-content: space-between;
+}
+
+.colors .option {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  margin-top: 3px;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.colors .option:hover {
+  transform: scale(1.15);
+}
+
+.colors .option:nth-child(1) {
+  background-color: #ffffff;
+  border: 1px solid #bfbfbf;
+}
+
+.colors .option:nth-child(2) {
+  background-color: #000000;
+}
+
+.colors .option:nth-child(3) {
+  background-color: #E02020;
+}
+
+.colors .option:nth-child(4) {
+  background-color: #6DD400;
+}
+
+.colors .option:nth-child(5) {
+  background-color: #4A98F7;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.colors .option.selected::before {
+  position: absolute;
+  content: "";
+  top: 50%;
+  left: 50%;
+  height: 12px;
+  width: 12px;
+  background: inherit;
+  border-radius: inherit;
+  border: 2px solid #fff;
+  transform: translate(-50%, -50%);
+  pointer-events: none; /* let clicks pass through to the swatch */
+}
+
+.colors .option:first-child.selected::before {
+  border-color: #ccc;
+}
+
+.option #color-picker {
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.buttons button {
+  width: 100%;
+  color: #fff;
+  border: none;
+  outline: none;
+  padding: 11px 0;
+  font-size: 0.9rem;
+  margin-bottom: 13px;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.buttons .clear-canvas {
+  color: var(--text-secondary);
+  border: 1px solid var(--panel-border);
+}
+
+.clear-canvas:hover {
+  color: var(--bg-deep);
+  background: var(--text-secondary);
+  border-color: var(--text-secondary);
+}
+
+.buttons .delete-shape {
+  color: #ffb3b3;
+  border: 1px solid #5a2b2b;
+}
+
+.delete-shape:hover {
+  color: #fff;
+  background: #b3261e;
+  border-color: #b3261e;
+}
+
+.buttons .save-img {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--bg-deep);
+}
+
+.save-img:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.hint {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  padding: 0 6px;
+}
+
+.hint b {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.drawing-board {
+  flex: 1;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.drawing-board canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Footer credit */
+.site-footer {
+  width: 100%;
+  padding: 0 10px 10px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
+.site-footer a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(109, 212, 0, 0.4);
+  transition: border-color 0.3s ease, opacity 0.3s ease;
+}
+
+.site-footer a:hover {
+  border-color: var(--accent);
+  opacity: 0.85;
+}
