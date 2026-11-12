@@ -8,11 +8,16 @@ const canvas = document.querySelector("canvas"),
   deleteShapeBtn = document.querySelector(".delete-shape"),
   ctx = canvas.getContext("2d");
 
+const STORAGE_KEY = "shapes-drawing-app:v1";
+const SAVE_DELAY = 300;
+let saveTimer = null;
+let isRestoring = false;
+
 // global state
 let objects = [];
 let selectedTool = "brush";
 let brushWidth = 5;
-let selectedColor = "#000";
+let selectedColor = "#000000";
 
 let selectedShape = null;
 let currentShape = null;
@@ -140,6 +145,153 @@ const cursorForHandle = (handle) => {
       w: "ew-resize",
     }[handle] || "default"
   );
+};
+
+/* ------------------------- local storage ------------------------- */
+
+const normalizeColor = (value) => {
+  if (typeof value !== "string") return "#000000";
+  let c = value.trim().toLowerCase();
+  if (/^#[0-9a-f]{3}$/.test(c)) {
+    c = "#" + c[1] + c[1] + c[2] + c[2] + c[3] + c[3];
+  }
+  return /^#[0-9a-f]{6}$/.test(c) ? c : "#000000";
+};
+
+const sanitizeObject = (obj) => {
+  if (!obj || typeof obj !== "object") return null;
+  const type = obj.type;
+  if (!["brush", "rectangle", "circle", "triangle"].includes(type)) return null;
+
+  const color = normalizeColor(obj.color);
+  const lineWidth = Number(obj.lineWidth);
+  if (!Number.isFinite(lineWidth) || lineWidth <= 0) return null;
+
+  if (type === "brush") {
+    if (!Array.isArray(obj.points)) return null;
+    const points = obj.points
+      .filter((p) => p && Number.isFinite(p.x) && Number.isFinite(p.y))
+      .map((p) => ({ x: p.x, y: p.y }));
+    if (!points.length) return null;
+    return { type, points, color, lineWidth };
+  }
+
+  const x1 = Number(obj.x1);
+  const y1 = Number(obj.y1);
+  const x2 = Number(obj.x2);
+  const y2 = Number(obj.y2);
+  if (![x1, y1, x2, y2].every(Number.isFinite)) return null;
+
+  return { type, x1, y1, x2, y2, color, lineWidth, fill: !!obj.fill };
+};
+
+const getSerializableState = () => ({
+  version: 1,
+  objects,
+  selectedTool,
+  brushWidth,
+  selectedColor: normalizeColor(selectedColor),
+  fillColor: fillColor.checked,
+  colorPickerValue: colorPicker.value,
+  customColor: pickerSwatch.classList.contains("selected"),
+});
+
+const saveState = () => {
+  if (isRestoring) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
+  } catch (err) {
+    console.warn("Could not save drawing to localStorage:", err);
+  }
+};
+
+const scheduleSave = () => {
+  if (isRestoring) return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    saveState();
+  }, SAVE_DELAY);
+};
+
+const restoreState = () => {
+  let raw;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch (err) {
+    console.warn("Could not read localStorage:", err);
+    return;
+  }
+  if (!raw) return;
+
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (err) {
+    console.warn("Saved drawing data is corrupted:", err);
+    return;
+  }
+  if (!data || data.version !== 1) return;
+
+  isRestoring = true;
+
+  if (Array.isArray(data.objects)) {
+    objects = data.objects.map(sanitizeObject).filter(Boolean);
+  } else {
+    objects = [];
+  }
+
+  if (
+    typeof data.selectedTool === "string" &&
+    ["select", "brush", "eraser", "rectangle", "circle", "triangle"].includes(
+      data.selectedTool
+    )
+  ) {
+    selectedTool = data.selectedTool;
+    document.querySelectorAll(".tool").forEach((btn) => btn.classList.remove("active"));
+    const btn = document.getElementById(selectedTool);
+    if (btn) btn.classList.add("active");
+  }
+
+  if (Number.isFinite(data.brushWidth)) {
+    brushWidth = Math.min(30, Math.max(1, data.brushWidth));
+    sizeSlider.value = brushWidth;
+  }
+
+  fillColor.checked = !!data.fillColor;
+
+  if (
+    typeof data.colorPickerValue === "string" &&
+    /^#[0-9a-f]{6}$/i.test(data.colorPickerValue)
+  ) {
+    colorPicker.value = data.colorPickerValue;
+  }
+
+  if (typeof data.selectedColor === "string") {
+    selectedColor = normalizeColor(data.selectedColor);
+  }
+
+  swatchButtons.forEach((s) => s.classList.remove("selected"));
+  if (data.customColor) {
+    pickerSwatch.style.background = selectedColor;
+    pickerSwatch.classList.add("selected");
+  } else {
+    let matched = null;
+    swatchButtons.forEach((btn) => {
+      if (btn === pickerSwatch) return;
+      const c = normalizeColor(btn.dataset.color);
+      if (c === selectedColor) matched = btn;
+    });
+    if (matched) {
+      matched.classList.add("selected");
+    } else {
+      pickerSwatch.style.background = selectedColor;
+      pickerSwatch.classList.add("selected");
+    }
+  }
+
+  isRestoring = false;
+  redraw();
 };
 
 /* ------------------------- drawing ------------------------- */
@@ -479,6 +631,7 @@ const stopDraw = () => {
     originalObject = null;
     originalBBox = null;
     originalPoints = null;
+    scheduleSave();
     return;
   }
 
@@ -499,6 +652,7 @@ const stopDraw = () => {
 
   isDrawing = false;
   redraw();
+  scheduleSave();
 };
 
 /* ------------------------- tool buttons ------------------------- */
@@ -520,12 +674,16 @@ toolBtns.forEach((btn) => {
 
     canvas.style.cursor = selectedTool === "select" ? "default" : "crosshair";
     redraw();
+    scheduleSave();
   });
 });
 
 sizeSlider.addEventListener("change", () => {
   brushWidth = Number(sizeSlider.value);
+  scheduleSave();
 });
+
+fillColor.addEventListener("change", scheduleSave);
 
 /* ------------------------- colors ------------------------- */
 
@@ -535,7 +693,8 @@ const pickerSwatch = colorPicker.parentElement;
 const selectSwatch = (swatch, color) => {
   swatchButtons.forEach((s) => s.classList.remove("selected"));
   swatch.classList.add("selected");
-  selectedColor = color;
+  selectedColor = normalizeColor(color);
+  scheduleSave();
 };
 
 // Preset swatches — use data-color, listen on pointerdown (fires before
@@ -582,6 +741,7 @@ clearCanvas.addEventListener("click", () => {
   isMoving = false;
   isResizing = false;
   redraw();
+  scheduleSave();
 });
 
 deleteShapeBtn.addEventListener("click", () => {
@@ -589,6 +749,7 @@ deleteShapeBtn.addEventListener("click", () => {
   objects = objects.filter((obj) => obj !== selectedShape);
   selectedShape = null;
   redraw();
+  scheduleSave();
 });
 
 /* ------------------------- SVG export ------------------------- */
@@ -693,6 +854,7 @@ window.addEventListener("load", () => {
   objects = [];
   selectedShape = null;
   redraw();
+  restoreState();
   canvas.style.cursor = selectedTool === "select" ? "default" : "crosshair";
 });
 
@@ -715,4 +877,9 @@ canvas.addEventListener("mousemove", drawing);
 canvas.addEventListener("mouseup", stopDraw);
 canvas.addEventListener("mouseleave", () => {
   if (isDrawing || isMoving || isResizing) stopDraw();
+});
+
+window.addEventListener("beforeunload", saveState);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") saveState();
 });
